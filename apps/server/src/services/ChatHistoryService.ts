@@ -20,12 +20,25 @@ export class ChatHistoryService {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        
+        try {
+            await query(`ALTER TABLE chat_nodes ADD COLUMN IF NOT EXISTS username TEXT;`);
+            await query(`
+                UPDATE chat_nodes 
+                SET username = sessions.username 
+                FROM sessions 
+                WHERE chat_nodes.session_id = sessions.token 
+                AND chat_nodes.username IS NULL;
+            `);
+        } catch (e) {
+            console.error("Migration error (ignorable if column exists):", e);
+        }
     }
 
-    static async addNode(sessionId: string, userMessage: string, aiResponse: string, parentId: number | null = null): Promise<number> {
+    static async addNode(sessionId: string, username: string, userMessage: string, aiResponse: string, parentId: number | null = null): Promise<number> {
         const res = await query(
-            'INSERT INTO chat_nodes (session_id, user_message, ai_response, parent_id) VALUES ($1, $2, $3, $4) RETURNING id',
-            [sessionId, userMessage, aiResponse, parentId]
+            'INSERT INTO chat_nodes (session_id, username, user_message, ai_response, parent_id) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+            [sessionId, username, userMessage, aiResponse, parentId]
         );
         return res.rows[0].id;
     }
@@ -49,10 +62,10 @@ export class ChatHistoryService {
         return res.rows;
     }
 
-    static async getGraph(sessionId: string): Promise<ChatNode[]> {
+    static async getGraph(username: string): Promise<ChatNode[]> {
         const res = await query(
-            'SELECT id, parent_id, user_message, ai_response, created_at FROM chat_nodes WHERE session_id = $1 ORDER BY created_at ASC',
-            [sessionId]
+            'SELECT id, parent_id, user_message, ai_response, created_at FROM chat_nodes WHERE username = $1 ORDER BY created_at ASC',
+            [username]
         );
         return res.rows;
     }

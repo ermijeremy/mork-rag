@@ -13,6 +13,7 @@ dns.setDefaultResultOrder('ipv4first');
 
 type AppVariables = {
     sessionToken: string;
+    username: string;
 };
 
 const app = new Hono<{ Variables: AppVariables }>();
@@ -69,6 +70,7 @@ app.post('/api/chat', authMiddleware, async (c) => {
         if (!message) return c.json({ error: "Message is required" }, 400);
 
         const sessionToken = c.get('sessionToken');
+        const username = c.get('username');
 
         let historyContext = '';
         if (parentId) {
@@ -84,6 +86,7 @@ app.post('/api/chat', authMiddleware, async (c) => {
         // Persist the new node in the graph (branching off parentId if given)
         const nodeId = await ChatHistoryService.addNode(
             sessionToken,
+            username,
             message,
             response,
             parentId ?? null
@@ -99,8 +102,8 @@ app.post('/api/chat', authMiddleware, async (c) => {
 
 app.get('/api/chat/graph', authMiddleware, async (c) => {
     try {
-        const sessionToken = c.get('sessionToken');
-        const graph = await ChatHistoryService.getGraph(sessionToken);
+        const username = c.get('username');
+        const graph = await ChatHistoryService.getGraph(username);
         return c.json({ graph });
     } catch (e: any) {
         console.error(e);
