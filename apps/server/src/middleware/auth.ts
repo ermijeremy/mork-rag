@@ -5,6 +5,7 @@ import { SessionService } from '../services/SessionService.js';
 type AppVariables = {
     sessionToken: string;
     username: string;
+    userId: number;
 };
 
 export async function authMiddleware(c: Context<{ Variables: AppVariables }>, next: Next) {
@@ -18,13 +19,14 @@ export async function authMiddleware(c: Context<{ Variables: AppVariables }>, ne
 
     try {
         // Validate against Postgres
-        const username = await SessionService.getUserByToken(token);
-        if (!username) {
+        const user = await SessionService.getUserByToken(token);
+        if (!user) {
             return c.json({ error: 'Unauthorized: Invalid token' }, 401);
         }
 
         c.set('sessionToken', token);
-        c.set('username', username);
+        c.set('username', user.username);
+        c.set('userId', user.id);
     } catch (e) {
         console.error("Auth middleware error:", e);
         return c.json({ error: 'Internal Server Error during authentication' }, 500);
