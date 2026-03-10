@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 
 interface RulesViewerProps {
     onRuleClick?: (nodeIds: string[]) => void;
+    version?: number;
 }
 
-export const RulesViewer: React.FC<RulesViewerProps> = ({ onRuleClick }) => {
+export const RulesViewer: React.FC<RulesViewerProps> = ({ onRuleClick, version }) => {
     const [rules, setRules] = useState<{ antecedent: string[], support: string, nodeIds: string[] }[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/rules.txt')
+        fetch(`/rules.txt?v=${version || Date.now()}`)
             .then(res => res.text())
             .then(text => {
                 const parsedRules = text.split('\n')
