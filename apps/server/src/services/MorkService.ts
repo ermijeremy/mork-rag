@@ -11,10 +11,11 @@ export class MorkService {
     }
 
     // Clear mork db
-    async clearGraph(): Promise<void> {
+    async clearGraph(namespaceStr?: string): Promise<void> {
 
         try {
             const clearReq = new ClearRequest();
+            clearReq.namespace(namespaceStr || "");
             clearReq.exprVal = "$x";
             await this.client.dispatch(clearReq);
             console.log("MORK db cleared.");
@@ -25,8 +26,9 @@ export class MorkService {
     }
 
     // upload facts to mork
-    async uploadMetta(mettaContent: string): Promise<void> {
+    async uploadMetta(mettaContent: string, namespaceStr?: string): Promise<void> {
         const req = new UploadRequest();
+        req.namespace(namespaceStr || "");
         req.patternVal = "$x";
         req.templateVal = "$x";
         req.dataVal = mettaContent;
@@ -34,14 +36,15 @@ export class MorkService {
     }
 
     // upload embeddings to mork
-    async uploadEmbeddings(id: string, embedding: number[]): Promise<void> {
+    async uploadEmbeddings(id: string, embedding: number[], namespaceStr?: string): Promise<void> {
         const mettaLines = embedding.map((val, idx) => `(embed ${id} ${idx + 1} ${val})`);
-        await this.uploadMetta(mettaLines.join('\n'));
+        await this.uploadMetta(mettaLines.join('\n'), namespaceStr);
     }
 
     // retrieve embeddings from mork
-    async getAllEmbeddings(): Promise<{ id: string, index: number, value: number }[]> {
+    async getAllEmbeddings(namespaceStr?: string): Promise<{ id: string, index: number, value: number }[]> {
         const req = new ExportRequest();
+        req.namespace(namespaceStr || "");
         req.patternVal = "(embed $id $idx $val)";
         req.templateVal = "(embed $id $idx $val)";
 
@@ -62,8 +65,9 @@ export class MorkService {
     }
 
     // query mork to retrieve posts(facts) by id
-    async getPostById(id: string): Promise<string> {
+    async getPostById(id: string, namespaceStr?: string): Promise<string> {
         const req = new ExportRequest();
+        req.namespace(namespaceStr || "");
         req.patternVal = `($x ${id} $y)`;
         req.templateVal = `($x ${id} $y)`;
 
