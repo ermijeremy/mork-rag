@@ -27,29 +27,7 @@ function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#050505', color: '#4ade80', fontFamily: 'sans-serif', overflow: 'hidden' }}>
-      <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <VisualizationHome token={token}>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: 'transparent',
-              border: '1px solid #ef4444',
-              color: '#ef4444',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontFamily: 'monospace',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            Logout
-          </button>
-        </VisualizationHome>
-      </div>
-    </div>
+    <VisualizationHome token={token} onLogout={handleLogout} />
   );
 }
 
