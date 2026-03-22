@@ -69,4 +69,18 @@ export class ChatHistoryService {
         );
         return res.rows;
     }
+
+    static async deleteBranch(nodeId: number, username: string): Promise<void> {
+        // Recursively find and delete the node and all its descendant children
+        await query(`
+            WITH RECURSIVE descendants AS (
+                SELECT id FROM chat_nodes WHERE id = $1 AND username = $2
+                UNION ALL
+                SELECT cn.id FROM chat_nodes cn
+                INNER JOIN descendants d ON cn.parent_id = d.id
+            )
+            DELETE FROM chat_nodes
+            WHERE id IN (SELECT id FROM descendants);
+        `, [nodeId, username]);
+    }
 }
