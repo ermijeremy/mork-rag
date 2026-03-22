@@ -152,7 +152,7 @@ app.post('/api/chat', authMiddleware, async (c) => {
         }
 
         // Call the LLM with RAG context + graph branch history
-        const response = await chatService.chat(message, historyContext, String(userId));
+        const { response, debug } = await chatService.chat(message, historyContext, String(userId));
 
         // Persist the new node in the graph (branching off parentId if given)
         const nodeId = await ChatHistoryService.addNode(
@@ -163,7 +163,7 @@ app.post('/api/chat', authMiddleware, async (c) => {
             parentId ?? null
         );
 
-        return c.json({ response, nodeId, parentId: parentId ?? null });
+        return c.json({ response, nodeId, parentId: parentId ?? null, debug });
     } catch (e: any) {
         console.error(e);
         return c.json({ success: false, error: e.message }, 500);
@@ -176,6 +176,21 @@ app.get('/api/chat/graph', authMiddleware, async (c) => {
         const username = c.get('username');
         const graph = await ChatHistoryService.getGraph(username);
         return c.json({ graph });
+    } catch (e: any) {
+        console.error(e);
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.delete('/api/chat/graph/:id', authMiddleware, async (c) => {
+    try {
+        const username = c.get('username');
+        const nodeId = parseInt(c.req.param('id'), 10);
+        if (isNaN(nodeId)) {
+            return c.json({ error: 'Invalid History ID' }, 400);
+        }
+        await ChatHistoryService.deleteBranch(nodeId, username);
+        return c.json({ success: true });
     } catch (e: any) {
         console.error(e);
         return c.json({ success: false, error: e.message }, 500);
