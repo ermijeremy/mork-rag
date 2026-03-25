@@ -18,48 +18,64 @@ export class ChatService {
     }
 
     // Ingestion
-    async ingestData(filePath?: string): Promise<string> {
+    async ingestData(userId: string, filePath?: string): Promise<string> {
         let resolvedPath = filePath;
         if (!resolvedPath) {
             const envPath = process.env.DATA_PATH;
             if (envPath) {
+                // @ts-ignore
                 const path = await import('path');
                 resolvedPath = path.resolve(process.cwd(), envPath);
             } else {
+                // @ts-ignore
                 const path = await import('path');
                 resolvedPath = path.resolve(__dirname, '../../../../data/data.metta');
             }
         }
 
-        await this.morkService.clearGraph();
+        await this.morkService.clearGraph(userId);
 
-        const posts = await MettaParser.parse(resolvedPath!, true);
+        // @ts-ignore
+        const posts = await MettaParser.parse(resolvedPath!, true, userId);
 
+        // Upload to User Namespace
         for (const post of posts) {
             // Generate Embedding
+            // @ts-ignore
             const textToEmbed = MettaParser.toEmbeddingString(post);
             const embedding = await this.embeddingService.embed(textToEmbed);
 
-            // Upload Embedding
-            await this.morkService.uploadEmbeddings(post.id, embedding);
+            // Upload Embedding to Namespace
+            await this.morkService.uploadEmbeddings(post.id, embedding, userId);
+
         }
 
-        return `Ingested ${posts.length} posts.`;
+        return `Ingested ${posts.length} posts into namespace ${userId}.`;
     }
 
     // Retrieve
-    async retrieve(query: string, topK: number = 5): Promise<any[]> {
+    async retrieve(userId: string, query: string, topK: number = 5): Promise<{ results: any[], debug: any }> {
         // embed user query
         const queryEmbedding = await this.embeddingService.embed(query);
 
-        // Fetch embeddings from MORK
-        const allEmbeddingsFlat = await this.morkService.getAllEmbeddings();
+        // --- Debug: Simulate Ingestion Format for User Query ---
+        const queryId = `query-${Date.now()}`;
+        const mettaDiff = `(insert ${queryId} "${query.replace(/"/g, '\\"')}")`;
+        const embeddingDiff = queryEmbedding.map((val, idx) => `(embed ${queryId} ${idx + 1} ${val})`).join('\n');
+        // ------------------------------------------------------
+
+        // Fetch embeddings from MORK (User Namespace)
+        const allEmbeddingsFlat = await this.morkService.getAllEmbeddings(userId);
 
         // Reconstruct vectors
         const vectors: Record<string, number[]> = {};
-        for (const { id, index, value } of allEmbeddingsFlat) {
-            if (!vectors[id]) vectors[id] = [];
-            vectors[id][index - 1] = value;
+
+        // Added safe check in case vectors are empty
+        if (allEmbeddingsFlat) {
+            for (const { id, index, value } of allEmbeddingsFlat) {
+                if (!vectors[id]) vectors[id] = [];
+                vectors[id][index - 1] = value;
+            }
         }
 
         // Cosine Similarity
@@ -78,12 +94,23 @@ export class ChatService {
 
         // Retrieve Content
         const results = [];
+        const morkResponses = []; // Debug info
+
         for (const item of top) {
-            const content = await this.morkService.getPostById(item.id);
+            const content = await this.morkService.getPostById(item.id, userId);
+            console.log("cnot", content);
             results.push({ ...item, content });
+            morkResponses.push(content);
         }
 
-        return results;
+        return {
+            results,
+            debug: {
+                queryMetta: mettaDiff,
+                queryEmbedding: embeddingDiff,
+                morkResponses
+            }
+        };
     }
 
     private cosineSimilarity(a: number[], b: number[]): number {
@@ -100,8 +127,8 @@ export class ChatService {
 
     // Chat
     // Mistral is used for chat generation(for free api), can switch to larger LLM for better result 
-    async chat(message: string, historyContext: string = ''): Promise<string> {
-        const context = await this.retrieve(message);
+    async chat(message: string, historyContext: string = '', userId: string): Promise<{ response: string, debug: any }> {
+        const { results: context, debug } = await this.retrieve(userId, message);
 
         const contextStr = context.map(c => `[ID: ${c.id}]\n${c.content}`).join('\n---\n');
 
@@ -109,7 +136,7 @@ export class ChatService {
             const systemPrompt = `You are an intelligent assistant helping the user analyze their own posts and content. 
             The provided context contains specific posts with attributes like title, tone, complexity, and engagement. 
             Your goal is to answer briefly the user's question by generalizing patterns and inferring insights from this context. 
-            Do not just list the retrieved items; instead, synthesize the information to provide a comprehensive and thoughtful answer based on the user's history.`;
+            Do not just list the retrieved items; instead, synthesize the information to provide a comprehensive and thoughtful answer based on the user's history. use the retrieved content to answer the question if only if the users question needs the context, otherwise answer the question without using the context. If the context is not relevant to the question, ignore it.`;
 
             let userPrompt = `Context from Knowledge Base:\n${contextStr}\n\n`;
             if (historyContext) {
@@ -138,10 +165,13 @@ export class ChatService {
             }
 
             const data = await response.json();
-            return data.choices[0].message.content;
+            return {
+                response: data.choices[0].message.content,
+                debug
+            };
 
         } catch (e: any) {
-            throw new Error("LLM Generation failed:", e.message);
+            throw new Error(`LLM Generation failed: ${e.message}`);
         }
     }
 }

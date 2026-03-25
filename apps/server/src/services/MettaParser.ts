@@ -13,7 +13,7 @@ export interface Post {
 
 export class MettaParser {
   // Parses a metta file (needs pipeline to feed metta data) and returns structured posts
-  static async parse(filePath: string, load = false): Promise<Post[]> {
+  static async parse(filePath: string, load = false, userId?: string): Promise<Post[]> {
     const content = fs.readFileSync(filePath, 'utf-8');
     const lines = content.split('\n').filter(line => line.trim() !== '');
 
@@ -21,7 +21,7 @@ export class MettaParser {
     const regex = /\(([\w-]+)\s+(A_\w+)\s+"([^"]+)"\)/;
 
     for (const line of lines) {
-      if (load) { await morkService.uploadMetta(line); }
+      if (load) { await morkService.uploadMetta(line, userId); }
       const match = line.match(regex);
       if (match) {
         const [, property, id, value] = match;
