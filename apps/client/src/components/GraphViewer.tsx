@@ -212,7 +212,7 @@ export const GraphViewer: React.FC<GraphViewerProps> = ({ mettaText, highlightRu
     return (
         <div
             ref={containerRef}
-            style={{ width: '100%', height: '100%', backgroundColor: '#0f172a', position: 'relative', overflow: 'hidden' }}
+            style={{ width: '100%', height: '100%', backgroundColor: 'transparent', position: 'relative', overflow: 'hidden' }}
             onWheel={handleWheel}
             onPointerDown={(e) => handlePointerDown(e)}
             onPointerMove={handlePointerMove}
@@ -220,10 +220,22 @@ export const GraphViewer: React.FC<GraphViewerProps> = ({ mettaText, highlightRu
             onPointerLeave={handlePointerUp}
         >
             {/* Controls */}
-            <div style={{ position: 'absolute', bottom: 20, right: 20, zIndex: 10, display: 'flex', gap: '10px' }}>
-                <button onClick={zoomIn} style={{ padding: '8px 12px', background: 'rgba(30, 41, 59, 0.8)', border: '1px solid #4ade80', color: '#4ade80', cursor: 'pointer', borderRadius: '4px', fontFamily: 'monospace' }}>+</button>
-                <button onClick={zoomOut} style={{ padding: '8px 12px', background: 'rgba(30, 41, 59, 0.8)', border: '1px solid #4ade80', color: '#4ade80', cursor: 'pointer', borderRadius: '4px', fontFamily: 'monospace' }}>-</button>
-                <button onClick={resetZoom} style={{ padding: '8px 12px', background: 'rgba(30, 41, 59, 0.8)', border: '1px solid #4ade80', color: '#4ade80', cursor: 'pointer', borderRadius: '4px', fontFamily: 'monospace' }}>RESET ZOOM</button>
+            <div style={{ position: 'absolute', bottom: 20, right: 20, zIndex: 10, display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={zoomIn} 
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
+                  style={{ padding: '6px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '14px', transition: 'all var(--transition)' }}>+</button>
+                <button 
+                  onClick={zoomOut} 
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
+                  style={{ padding: '6px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '14px', transition: 'all var(--transition)' }}>-</button>
+                <button 
+                  onClick={resetZoom} 
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
+                  style={{ padding: '6px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '12px', transition: 'all var(--transition)' }}>Reset Zoom</button>
             </div>
 
             <svg
@@ -295,19 +307,19 @@ export const GraphViewer: React.FC<GraphViewerProps> = ({ mettaText, highlightRu
                                     y={-14}
                                     width={headerWidth}
                                     height={28}
-                                    fill="rgba(30, 41, 59, 0.8)"
-                                    stroke={highlightRule ? "rgba(74,222,128,0.2)" : "#4ade80"}
+                                    fill="var(--bg-surface)"
+                                    stroke={highlightRule ? "var(--border)" : "var(--border-hover)"}
                                     strokeWidth="1"
-                                    rx="4"
+                                    rx="6"
                                 />
                                 <text
                                     x={0}
                                     y={4}
-                                    fill={highlightRule ? "rgba(74,222,128,0.4)" : "#4ade80"}
-                                    fontSize={headerWidth < 100 ? "8" : (headerWidth < 130 ? "10" : "11")}
-                                    fontWeight="bold"
+                                    fill={highlightRule ? "var(--text-muted)" : "var(--text-primary)"}
+                                    fontSize={headerWidth < 100 ? "9" : (headerWidth < 130 ? "10" : "11")}
+                                    fontWeight="600"
                                     textAnchor="middle"
-                                    style={{ fontFamily: 'monospace' }}
+                                    style={{ fontFamily: 'var(--font)', letterSpacing: '0.04em' }}
                                 >
                                     {col.label}
                                 </text>
