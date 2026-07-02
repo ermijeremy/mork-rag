@@ -15,7 +15,7 @@ interface Message {
 }
 
 // ─── ChatInterface ────────────────────────────────────────────────────────────
-const ChatInterface: React.FC<{ token: string; onNewChat?: () => void }> = ({ token, onNewChat }) => {
+const ChatInterface: React.FC<{ token: string; aiProvider?: string; aiApiKey?: string; onNewChat?: () => void }> = ({ token, aiProvider, aiApiKey, onNewChat }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +53,7 @@ const ChatInterface: React.FC<{ token: string; onNewChat?: () => void }> = ({ to
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: userText, parentId: branchParentId }),
+        body: JSON.stringify({ message: userText, parentId: branchParentId, provider: aiProvider, apiKey: aiApiKey }),
       });
       const data = await res.json();
 

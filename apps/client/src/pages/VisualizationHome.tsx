@@ -40,6 +40,12 @@ const Icons = {
       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
+  Settings: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  ),
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -55,6 +61,10 @@ const VisualizationHome: React.FC<{ token: string; onLogout?: () => void }> = ({
   const [activeTab, setActiveTab] = useState<'chat' | 'graph'>('chat');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [chatResetKey, setChatResetKey] = useState(0);
+
+  const [aiProvider, setAiProvider] = useState<string>(localStorage.getItem('aiProvider') || 'mistral');
+  const [aiApiKey, setAiApiKey] = useState<string>(localStorage.getItem('aiApiKey') || '');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const handleNewChat = () => {
     setActiveTab('chat');
@@ -222,6 +232,89 @@ const VisualizationHome: React.FC<{ token: string; onLogout?: () => void }> = ({
         </div>
       )}
 
+      {/* ── Settings Modal ───────────────────────────────────────────────── */}
+      {showSettingsModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          <div style={{
+            width: '360px', borderRadius: 'var(--radius-xl)',
+            background: 'var(--bg-surface)', border: '1px solid var(--border-hover)',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+            padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px',
+            animation: 'popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+          }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>AI Provider Settings</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                Configure the AI model used for the RAG chat.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  Provider
+                </label>
+                <select
+                  value={aiProvider}
+                  onChange={(e) => {
+                    setAiProvider(e.target.value);
+                    localStorage.setItem('aiProvider', e.target.value);
+                  }}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border)', background: 'var(--bg-input)',
+                    color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'var(--font)',
+                    outline: 'none',
+                  }}
+                >
+                  <option value="mistral">Mistral AI</option>
+                  <option value="openai">OpenAI (GPT-3.5)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  API Key
+                </label>
+                <input
+                  type="password"
+                  value={aiApiKey}
+                  onChange={(e) => {
+                    setAiApiKey(e.target.value);
+                    localStorage.setItem('aiApiKey', e.target.value);
+                  }}
+                  placeholder="Enter API Key (Optional if set on server)"
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border)', background: 'var(--bg-input)',
+                    color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'var(--font)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+            </div>
+
+            <button
+              onClick={() => setShowSettingsModal(false)}
+              style={{
+                alignSelf: 'center', background: 'var(--text-primary)', border: 'none',
+                color: 'var(--bg-base)', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                fontFamily: 'var(--font)', padding: '10px 20px', borderRadius: 'var(--radius-sm)',
+                transition: 'all var(--transition)', marginTop: '8px', width: '100%'
+              }}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <nav style={{
         width: sidebarCollapsed ? '60px' : 'var(--sidebar-w)',
@@ -301,6 +394,13 @@ const VisualizationHome: React.FC<{ token: string; onLogout?: () => void }> = ({
             label="Ingest Data"
             collapsed={sidebarCollapsed}
           />
+          <NavItem
+            active={false}
+            onClick={() => setShowSettingsModal(true)}
+            icon={<Icons.Settings />}
+            label="Settings"
+            collapsed={sidebarCollapsed}
+          />
         </div>
 
         {/* Footer */}
@@ -318,7 +418,7 @@ const VisualizationHome: React.FC<{ token: string; onLogout?: () => void }> = ({
       {/* ── Main Content ─────────────────────────────────────────────────── */}
       <main style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: activeTab === 'chat' ? 'flex' : 'none', height: '100%', flexDirection: 'column' }}>
-          <ChatInterface key={chatResetKey} token={token} />
+          <ChatInterface key={chatResetKey} token={token} aiProvider={aiProvider} aiApiKey={aiApiKey} />
         </div>
         {activeTab === 'graph' && (
           <DataExplorer token={token} mode="graph" version={dataVersion} />

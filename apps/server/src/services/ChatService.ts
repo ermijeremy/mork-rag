@@ -127,7 +127,7 @@ export class ChatService {
 
     // Chat
     // Mistral is used for chat generation(for free api), can switch to larger LLM for better result 
-    async chat(message: string, historyContext: string = '', userId: string): Promise<{ response: string, debug: any }> {
+    async chat(message: string, historyContext: string = '', userId: string, providerOverride?: string, apiKeyOverride?: string): Promise<{ response: string, debug: any }> {
         const { results: context, debug } = await this.retrieve(userId, message);
 
         const contextStr = context.map(c => `[ID: ${c.id}]\n${c.content}`).join('\n---\n');
@@ -144,20 +144,41 @@ export class ChatService {
             }
             userPrompt += `Question: ${message}\nAnswer:`;
 
-            const response = await fetch(`${this.mistralUrl}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.mistralKey}`
-                },
-                body: JSON.stringify({
-                    model: 'mistral-tiny',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt }
-                    ]
-                })
-            });
+            const systemMsg = { role: 'system', content: systemPrompt };
+            const userMsg = { role: 'user', content: userPrompt };
+            let response;
+            
+            if (providerOverride === 'openai') {
+                const apiKey = apiKeyOverride || process.env.OPENAI_API_KEY;
+                if (!apiKey) throw new Error("OpenAI API Key is required");
+                
+                response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [systemMsg, userMsg]
+                    })
+                });
+            } else {
+                const apiKey = apiKeyOverride || this.mistralKey;
+                if (!apiKey) throw new Error("Mistral API Key is required");
+
+                response = await fetch(`${this.mistralUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'mistral-tiny',
+                        messages: [systemMsg, userMsg]
+                    })
+                });
+            }
 
             if (!response.ok) {
                 const err = await response.text();

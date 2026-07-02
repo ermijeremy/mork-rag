@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mork_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mork_password}
+      POSTGRES_DB: ${POSTGRES_DB:-mork_rag}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./apps/server
+    environment:
+      MORK_URL: ${MORK_URL:-http://localhost:8080}
+      MISTRAL_API_URL: ${MISTRAL_API_URL:-https://api.mistral.ai/v1}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+      DATA_PATH: /app/data/data.metta
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mork_user}:${POSTGRES_PASSWORD:-mork_password}@db:5432/${POSTGRES_DB:-mork_rag}
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./apps/client
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

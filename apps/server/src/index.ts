@@ -47,8 +47,8 @@ app.post('/api/login', async (c) => {
         try {
             user = await SessionService.login(username, password);
         } catch (authError: any) {
-             console.error("Login error:", authError.message);
-             return c.json({ error: authError.message || "Login failed" }, 401);
+            console.error("Login error:", authError.message);
+            return c.json({ error: authError.message || "Login failed" }, 401);
         }
 
         // Persist to Postgres
@@ -74,8 +74,8 @@ app.post('/api/register', async (c) => {
         try {
             user = await SessionService.register(username, password);
         } catch (regError: any) {
-             console.error("Registration error:", regError.message);
-             return c.json({ error: regError.message || "Registration failed" }, 400);
+            console.error("Registration error:", regError.message);
+            return c.json({ error: regError.message || "Registration failed" }, 400);
         }
 
         // Persist to Postgres
@@ -92,36 +92,36 @@ app.post('/api/register', async (c) => {
 app.post('/api/ingest', authMiddleware, async (c) => {
     try {
         const userId = c.get('userId');
-        
+
         const contentType = c.req.header('content-type') || '';
         if (contentType.includes('multipart/form-data')) {
             const body = await c.req.parseBody();
             const file = body['file'];
-            
-            if (file && file instanceof File) {
-                 const buffer = await file.arrayBuffer();
-                 let dataPath = '';
-                 if (process.env.DATA_PATH) {
-                     dataPath = path.resolve(process.cwd(), process.env.DATA_PATH);
-                 } else {
-                     dataPath = path.resolve(process.cwd(), '../../data/data.metta');
-                 }
-                 
-                 const bufferObj = Buffer.from(buffer);
-                 await writeFile(dataPath, bufferObj);
-                 console.log(`Updated data file at ${dataPath}`);
 
-                 // Also update client public data for visualization
-                 try {
-                     const clientDataPath = path.resolve(process.cwd(), '../client/public/data.metta');
-                     await writeFile(clientDataPath, bufferObj);
-                     console.log(`Updated client visualization data at ${clientDataPath}`);
-                 } catch (e) {
-                     console.warn("Failed to update client data file:", e);
-                 }
+            if (file && file instanceof File) {
+                const buffer = await file.arrayBuffer();
+                let dataPath = '';
+                if (process.env.DATA_PATH) {
+                    dataPath = path.resolve(process.cwd(), process.env.DATA_PATH);
+                } else {
+                    dataPath = path.resolve(process.cwd(), '../../data/data.metta');
+                }
+
+                const bufferObj = Buffer.from(buffer);
+                await writeFile(dataPath, bufferObj);
+                console.log(`Updated data file at ${dataPath}`);
+
+                // Also update client public data for visualization
+                try {
+                    const clientDataPath = path.resolve(process.cwd(), '../client/public/data.metta');
+                    await writeFile(clientDataPath, bufferObj);
+                    console.log(`Updated client visualization data at ${clientDataPath}`);
+                } catch (e) {
+                    console.warn("Failed to update client data file:", e);
+                }
             }
         }
-        
+
         // Convert number to string for namespace
         const result = await chatService.ingestData(String(userId));
         return c.json({ success: true, message: result });
@@ -135,7 +135,7 @@ app.post('/api/ingest', authMiddleware, async (c) => {
 app.post('/api/chat', authMiddleware, async (c) => {
     try {
         const body = await c.req.json();
-        const { message, parentId } = body as { message: string; parentId?: number | null };
+        const { message, parentId, provider, apiKey } = body as { message: string; parentId?: number | null; provider?: string; apiKey?: string };
 
         if (!message) return c.json({ error: "Message is required" }, 400);
 
@@ -152,7 +152,7 @@ app.post('/api/chat', authMiddleware, async (c) => {
         }
 
         // Call the LLM with RAG context + graph branch history
-        const { response, debug } = await chatService.chat(message, historyContext, String(userId));
+        const { response, debug } = await chatService.chat(message, historyContext, String(userId), provider, apiKey);
 
         // Persist the new node in the graph (branching off parentId if given)
         const nodeId = await ChatHistoryService.addNode(
@@ -185,7 +185,7 @@ app.get('/api/chat/graph', authMiddleware, async (c) => {
 app.delete('/api/chat/graph/:id', authMiddleware, async (c) => {
     try {
         const username = c.get('username');
-        const nodeId = parseInt(c.req.param('id'), 10);
+        const nodeId = parseInt(c.req.param('id') || '0', 10);
         if (isNaN(nodeId)) {
             return c.json({ error: 'Invalid History ID' }, 400);
         }
@@ -197,7 +197,7 @@ app.delete('/api/chat/graph/:id', authMiddleware, async (c) => {
     }
 });
 
-const port = 3000;
+const port = parseInt(process.env.PORT || '3000', 10);
 console.log(`Server is running on port ${port}`);
 
 serve({
