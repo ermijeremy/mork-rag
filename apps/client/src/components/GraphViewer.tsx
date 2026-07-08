@@ -35,7 +35,7 @@ export const GraphViewer: React.FC<GraphViewerProps> = ({ mettaText, highlightRu
         };
         window.addEventListener('resize', updateDimensions);
         updateDimensions();
-        setTimeout(updateDimensions, 100);
+        setTimeout(updateDimensions, 1000);
         return () => window.removeEventListener('resize', updateDimensions);
     }, []);
 
@@ -73,7 +73,7 @@ export const GraphViewer: React.FC<GraphViewerProps> = ({ mettaText, highlightRu
 
         const articleNodes = nodes.filter(n => n.type === 'article');
         const articleSpacing = dimensions.width / (articleNodes.length + 1);
-        const articleY = dimensions.height - 40; 
+        const articleY = dimensions.height - 40;
 
         articleNodes.forEach((node, idx) => {
             newPositions.set(node.id, {
@@ -102,7 +102,7 @@ export const GraphViewer: React.FC<GraphViewerProps> = ({ mettaText, highlightRu
         });
 
         setNodePositions(newPositions);
-    }, [nodes, dimensions.width, dimensions.height, propertyColumns]); 
+    }, [nodes, dimensions.width, dimensions.height, propertyColumns]);
 
     const relations = useMemo(() => {
         const adj = new Map<string, Set<string>>();
@@ -146,7 +146,7 @@ export const GraphViewer: React.FC<GraphViewerProps> = ({ mettaText, highlightRu
     const handleWheel = (e: React.WheelEvent) => {
         e.preventDefault();
         const scaleAmount = -e.deltaY * 0.001;
-        const newScale = Math.min(Math.max(transform.scale * (1 + scaleAmount), 0.1), 5); 
+        const newScale = Math.min(Math.max(transform.scale * (1 + scaleAmount), 0.1), 5);
         setTransform(prev => ({ ...prev, scale: newScale }));
     };
 
@@ -221,21 +221,21 @@ export const GraphViewer: React.FC<GraphViewerProps> = ({ mettaText, highlightRu
         >
             {/* Controls */}
             <div style={{ position: 'absolute', bottom: 20, right: 20, zIndex: 10, display: 'flex', gap: '8px' }}>
-                <button 
-                  onClick={zoomIn} 
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
-                  style={{ padding: '6px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '14px', transition: 'all var(--transition)' }}>+</button>
-                <button 
-                  onClick={zoomOut} 
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
-                  style={{ padding: '6px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '14px', transition: 'all var(--transition)' }}>-</button>
-                <button 
-                  onClick={resetZoom} 
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
-                  style={{ padding: '6px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '12px', transition: 'all var(--transition)' }}>Reset Zoom</button>
+                <button
+                    onClick={zoomIn}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
+                    style={{ padding: '6px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '14px', transition: 'all var(--transition)' }}>+</button>
+                <button
+                    onClick={zoomOut}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
+                    style={{ padding: '6px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '14px', transition: 'all var(--transition)' }}>-</button>
+                <button
+                    onClick={resetZoom}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
+                    style={{ padding: '6px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font)', fontWeight: 500, fontSize: '12px', transition: 'all var(--transition)' }}>Reset Zoom</button>
             </div>
 
             <svg

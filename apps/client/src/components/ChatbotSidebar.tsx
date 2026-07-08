@@ -43,7 +43,7 @@ const ChatbotSidebar: React.FC<ChatbotSidebarProps> = ({ onClose, token }) => {
 
       const id = rippleIdRef.current++;
       setRipples(prev => [...prev.slice(-20), { id, x, y, vx, vy }]);
-      setTimeout(() => { setRipples(prev => prev.filter(r => r.id !== id)); }, 3000);
+      setTimeout(() => { setRipples(prev => prev.filter(r => r.id !== id)); }, 8000);
     }
   };
 
@@ -94,7 +94,7 @@ const ChatbotSidebar: React.FC<ChatbotSidebarProps> = ({ onClose, token }) => {
       console.error(e);
       setMessages(prev => [...prev, { role: 'assistant', content: 'Error: Failed to connect to server.' }]);
     } finally {
-      setTimeout(scrollToBottom, 50);
+      setTimeout(scrollToBottom, 5000);
     }
   };
 

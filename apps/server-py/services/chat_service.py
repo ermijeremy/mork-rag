@@ -61,7 +61,7 @@ async def chat(
         {"role":"user", "content":user_prompt}
     ]
 
-    async with httpx.AsyncClient(timeout=40) as client:
+    async with httpx.AsyncClient(timeout=200) as client:
         if provider == "openai":
             key = api_key or os.getenv("OPENAI_API_KEY", "")
             resp = await client.post(

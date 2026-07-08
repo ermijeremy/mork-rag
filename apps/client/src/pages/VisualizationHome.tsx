@@ -94,7 +94,7 @@ const VisualizationHome: React.FC<{ token: string; onLogout?: () => void }> = ({
   const showToast = (message: string, type: Toast['type']) => {
     setToast({ message, type, visible: true });
     if (type !== 'error') {
-      setTimeout(() => setToast(prev => prev.message === message ? { ...prev, visible: false } : prev), 3000);
+      setTimeout(() => setToast(prev => prev.message === message ? { ...prev, visible: false } : prev), 6000);
     }
   };
 
