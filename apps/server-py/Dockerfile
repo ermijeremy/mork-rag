@@ -22,4 +22,7 @@ RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTr
 COPY . .
 
 EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Bind IPv6 (::) so Railway's private network (railway.internal) can reach it;
+# on Linux this dual-stacks and also accepts IPv4. Shell form so ${PORT} from
+# Railway expands, defaulting to 8000 for local runs.
+CMD ["sh", "-c", "uvicorn main:app --host :: --port ${PORT:-8000}"]
